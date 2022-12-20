@@ -1,0 +1,94 @@
+extract obj_props
+
+__text = $.readfile("out.txt").split("|")[:-1].map(v => v.split(";"))
+framerate = @number(__text[0][0])
+text = __text[1:]
+
+player_speed = 10.386
+frame_speed = player_speed*30*framerate
+
+let last_group = null
+let groups = level.get_objects(GROUPS, g => true).map(o => o[GROUPS]).filter(n => n != null).flatten().length // p
+let used_groups_idx = 0
+let used_groups = []
+let using_used_groups = false
+
+if framerate == 0 {
+    for j in 0..text.length {
+        for i in 0..frame.length/2 {
+            let color = frame[i*2].split(",")
+            color[0] = color[0].replace("\n", "").replace("\r", "")
+            channel = frame[i*2+1]
+
+            channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, 210).with(Y, 120).with(SCALING, 0.25).add()
+        }
+    }
+} else {
+    for j in 0..text.length {
+        frame = text[j]
+        if frame.length < 2 { continue }
+
+        if groups >= 998 {
+            using_used_groups = true
+        }
+
+        let group = null
+        if using_used_groups {
+            if used_groups_idx >= 997 {
+                used_groups_idx = 0
+            }
+            group = used_groups[used_groups_idx]
+            used_groups_idx++
+        } else {
+            group = ?g
+            used_groups.push(group)
+            groups++
+        }
+        
+        obj{
+            OBJ_ID: 1049,
+            X: -30,
+            Y: -30,
+            TARGET: group,
+            ACTIVATE_GROUP: false,
+        }.add()
+
+        for i in 0..frame.length/2 {
+            let color = frame[i*2].split(",")
+            color[0] = color[0].replace("\n", "").replace("\r", "")
+            channel = frame[i*2+1]
+
+            channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, -250 + j*frame_speed).with(Y, 120).with(SCALING, 0.1).with(GROUPS, [group]).add()
+        }
+
+        obj{
+            OBJ_ID: 901,
+            X: -250 + j*frame_speed,
+            Y: -20,
+            TARGET: group,
+            DURATION: framerate,
+            LOCK_TO_PLAYER_X: true,
+        }.add()
+        obj{
+            OBJ_ID: 1049,
+            X: -250 + j*frame_speed,
+            Y: -40,
+            TARGET: group,
+            ACTIVATE_GROUP: true,
+        }.add()
+
+        if last_group != null {
+            obj{
+                OBJ_ID: 1049,
+                X: -250 + j*frame_speed,
+                Y: -60,
+                TARGET: last_group,
+                ACTIVATE_GROUP: false,
+            }.add()
+        }
+
+        last_group = group
+        if j%6==0 { $.print("frame ",j+1) }
+    }
+}
+$.print(groups)
