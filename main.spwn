@@ -1,14 +1,23 @@
-extract obj_props
+// SETUP
 
-offset = -275
-groups_in_use = 998
+offset = 0 // x offset
+groups_in_use = 900 // how many groups you want to use 
+use_1x = false // slows down the loading speed by 50% and might also crash
+
+// END SETUP
+
+
+extract obj_props
 
 $.print("reading output...")
 __text = $.readfile("out.txt").split("|")[:-1].map(v => v.split(";"))
+$.print(__text[0])
 framerate = @number(__text[0][0])
+width = @number(__text[0][1])
+height = @number(__text[0][2])
 text = __text[1:]
 
-player_speed = 10.386
+player_speed = 19.2333334 if use_1x == false else 10.3853853854
 frame_speed = player_speed*30*framerate
 
 let groups = level.get_objects(GROUPS, g => true).map(o => o[GROUPS]).filter(n => n != null).flatten().length // p
@@ -16,6 +25,16 @@ let used_groups_idx = 0
 let used_groups = []
 let using_used_groups = false
 let last_group = null
+let loops = 0
+
+obj{
+    OBJ_ID: 1334 if use_1x == false else 201,
+    X: -15,
+    Y: 15,
+}.add()
+
+BG.set(rgb(0, 0, 0))
+1c.set(rgb(1, 0, 0))
 
 if framerate == 0 {
     for j in 0..text.length {
@@ -24,7 +43,7 @@ if framerate == 0 {
             color[0] = color[0].replace("\n", "").replace("\r", "")
             channel = frame[i*2+1]
 
-            channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, 210).with(Y, 120).with(SCALING, 0.25).add()
+            channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, 210).with(Y, 120).with(SCALING, ((width+0.5)/(height+0.5)*7)/width).add()
         }
     }
 } else {
@@ -49,12 +68,14 @@ if framerate == 0 {
         if groups >= groups_in_use {
             using_used_groups = true
             groups=0
+            loops++
         }
 
         let group = null
         if using_used_groups {
             if used_groups_idx >= groups_in_use-1 {
-                used_groups_idx = 1
+                used_groups_idx = 0
+                loops++
             }
             group = used_groups[used_groups_idx]
             used_groups_idx++
@@ -77,7 +98,7 @@ if framerate == 0 {
             color[0] = color[0].replace("\n", "").replace("\r", "")
             channel = frame[i*2+1]
 
-            channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, offset + j*frame_speed).with(Y, 120).with(SCALING, 0.2).with(GROUPS, group).add()
+            channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, 75+offset + j*frame_speed).with(Y, 150).with(SCALING, ((width+0.5)/(height+0.5)*7)/width).with(GROUPS, group).add()
         }
 
         obj{
