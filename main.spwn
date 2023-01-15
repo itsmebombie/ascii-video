@@ -1,7 +1,7 @@
 // SETUP
 
 offset = 0 // x offset
-groups_in_use = 900 // how many groups you want to use 
+groups_in_use = 998 // how many groups you want to use 
 use_1x = false // slows down the loading speed by 50% and might also crash
 
 // END SETUP

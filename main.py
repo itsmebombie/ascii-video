@@ -2,7 +2,7 @@ _EXTRA_SETTINGS = {
     "AUTO_PALETTE": True,  # enable auto palette generation
     "FASTER_AUTO_PALETTE": True,  # faster, less precise color palette generation
     # i would say it looks better on videos that have many colors but you used --colors 4 or something
-    "PALETTE": [
+    "CUSTOM_PALETTE": [
         (255, 255, 255),
         (255, 0, 0),
         (0, 255, 0),
@@ -213,9 +213,9 @@ def main():
     # create parser
     descStr = "This program converts an image into ASCII art."
     parser = argparse.ArgumentParser(description=descStr)
+
     # add expected arguments
     parser.add_argument("--file", dest="imgFile", required=True)
-    parser.add_argument("--out", dest="outFile", required=False)
     parser.add_argument("--columns", dest="columns", required=False)
     parser.add_argument("--framerate", dest="framerate", required=False)
     parser.add_argument("--colors", dest="colors", required=False)
@@ -229,8 +229,6 @@ def main():
 
     # set output file
     outFile = "out.txt"
-    if args.outFile:
-        outFile = args.outFile
 
     # literally the ratio between height and width or something
     scale = 0.4
@@ -290,7 +288,7 @@ def main():
                     color_palette=(
                         []
                         if _EXTRA_SETTINGS["AUTO_PALETTE"]
-                        else _EXTRA_SETTINGS["PALETTE"]
+                        else _EXTRA_SETTINGS["CUSTOM_PALETTE"]
                     ),
                     can_print=can_print,
                 )
@@ -338,7 +336,7 @@ def main():
             colors,
             1,
             color_palette=(
-                [] if _EXTRA_SETTINGS["AUTO_PALETTE"] else _EXTRA_SETTINGS["PALETTE"]
+                [] if _EXTRA_SETTINGS["AUTO_PALETTE"] else _EXTRA_SETTINGS["CUSTOM_PALETTE"]
             ),
         )
         rows = rows
