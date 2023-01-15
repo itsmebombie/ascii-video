@@ -157,7 +157,7 @@ def covertImageToAscii(
                 chars += 1
 
     if is_full_black:
-        return {(0, 0, 0): []}, 0
+        return {(0, 0, 0): []}, 0, rows
     if can_print:
         to_print += (
             "\n\x1b["
@@ -248,10 +248,10 @@ def main():
     if args.colors:
         colors = int(args.colors)
 
-    # set colors
+    # set cap
     cap = 2500
     if args.cap:
-        colors = int(args.cap)
+        cap = int(args.cap)
 
     print("\x1b[1mgenerating video...\x1b[0m")
 
