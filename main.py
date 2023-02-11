@@ -1,16 +1,16 @@
 _EXTRA_SETTINGS = {
+    "FASTER_COLOR_DISTANCE_FORMULA": False, # uses manhattan distance formula instead of euclidean distance formula when calculating the color palette of a frame
+    # it may give slightly less accurate results (not that noticeable) but it's a bit faster most of the times
     "AUTO_PALETTE": True,  # enable auto palette generation
-    "FASTER_AUTO_PALETTE": True,  # faster, less precise color palette generation
+    "ALTERNATIVE_AUTO_PALETTE": True,  # faster, less precise color palette generation
     # i would say it looks better on videos that have many colors but you used --colors 4 or something
     "CUSTOM_PALETTE": [
         (255, 255, 255),
-        (255, 0, 0),
-        (0, 255, 0),
-        (0, 0, 255),
     ],  # only applied when AUTO_PALETTE is set to False
 }
 
 # heavily modified version of https://www.geeksforgeeks.org/converting-image-ascii-image-python/
+import sys
 from PIL import Image
 import moviepy.editor as mp
 import argparse
@@ -20,9 +20,11 @@ import os
 import cv2
 import re
 import shutil
+import math
+import numpy
 import extcolors
 
-gscale2 = "^+={"  #'@&#%_'
+ascii_characters = "^+={"
 palette = []
 
 os.system("")
@@ -40,23 +42,38 @@ def natural_keys(text):
     return [atof(c) for c in re.split(r"[+-]?([0-9]+(?:[.][0-9]*)?|[.][0-9]+)", text)]
 
 
+if not _EXTRA_SETTINGS["FASTER_COLOR_DISTANCE_FORMULA"]:
+    def gen_squares():
+        squares = [i for i in range(257)] + [-(256-i) for i in range(257)]
+        return [num**2 for num in squares]
+    square_8bit = gen_squares()
+
+    def gen_sqrts():
+        squared_differences = [i for i in range(2**18+1)]
+        return [math.sqrt(diff) for diff in squared_differences]
+    sqrt_20bit = gen_sqrts()
+
+
 def closest_color(target):
     global palette
-
+    
     closest_color = None
     closest_distance = 10.0**301
     for color in palette:
-        distance = (
-            (color[0] ^ target[0]) + (color[1] ^ target[1]) + (color[2] ^ target[2])
-        )
+        if _EXTRA_SETTINGS["FASTER_COLOR_DISTANCE_FORMULA"]:
+            distance = abs(color[0] - target[0]) + abs(color[1] - target[1]) + abs(color[2] - target[2])
+        else:
+            distance = sqrt_20bit[square_8bit[color[0] - target[0]] + square_8bit[color[1] - target[1]] + square_8bit[color[2] - target[2]]]
+
         if distance < closest_distance:
             closest_color = color
             closest_distance = distance
+    
     return closest_color
 
 
 def gen_palette(fileName, colors, image_rgb):
-    if _EXTRA_SETTINGS["FASTER_AUTO_PALETTE"]:
+    if _EXTRA_SETTINGS["ALTERNATIVE_AUTO_PALETTE"]:
         color_palette = image_rgb.quantize(colors=colors).getpalette()
         return [
             tuple(color_palette[i : i + 3]) for i in range(0, len(color_palette), 3)
@@ -68,11 +85,9 @@ def gen_palette(fileName, colors, image_rgb):
         return [color_palette[i][0] for i in range(0, len(color_palette))]
 
 
-def covertImageToAscii(
-    fileName, columns, scale, colors, nr_frames, color_palette=[], can_print=True
-):
+def covertImageToAscii(fileName, columns, scale, colors, nr_frames, color_palette=[], can_print=True):
     # declare globals
-    global gscale2, palette
+    global ascii_characters, palette
     if can_print:
         to_print = "\x1b[1;34mframe " + str(nr_frames) + " \x1b[22;0m\n"
 
@@ -85,12 +100,11 @@ def covertImageToAscii(
     # Get the color palette
     if color_palette == []:
         color_palette = gen_palette(fileName, colors, image_rgb)
-        color_palette = [
-            color for color in color_palette if any(c >= 16 for c in color)
-        ]
-        # if can_print: to_print = to_print + "\x1b[1mpalette:\x1b[22m "+str(color_palette)+"\n" # this breaks some things and im too lazy to patch it up so imma leave it like this
+        color_palette = [color for color in color_palette if any(c >= 16 for c in color)]
+        color_palette += [(0, 0, 0)]
 
-    color_palette += [(0, 0, 0)]
+    # if can_print: to_print = to_print + "\x1b[1mpalette:\x1b[22m "+str(color_palette)+"\n" # debug
+    
     palette = color_palette
 
     # store dimensions
@@ -126,10 +140,10 @@ def covertImageToAscii(
             # crop image to ~~tile~~pixel
             x1 = int(i * w)
             # get pixel and name it avg cause im too lazy to change name
-            avg = image_gray.getpixel((x1, y1)) * 1.5
+            avg = image_gray.getpixel((x1, y1)) * 2
             # look up ascii char
-            gsval = gscale2[
-                max(0, min(int((avg * (len(gscale2) - 1)) / 255), len(gscale2) - 1))
+            gsval = ascii_characters[
+                max(0, min(int((avg * (len(ascii_characters) - 1)) / 255), len(ascii_characters) - 1))
             ]  # very readable
 
             # append ascii char to string
@@ -156,8 +170,6 @@ def covertImageToAscii(
             for _ in aimg[key][j]:
                 chars += 1
 
-    if is_full_black:
-        return {(0, 0, 0): []}, 0, rows
     if can_print:
         to_print += (
             "\n\x1b["
@@ -166,6 +178,10 @@ def covertImageToAscii(
             + " characters\x1b[0m"
         )
         print("\x1b[" + str(to_print.count("\n") + 1) + "A" + to_print)
+    
+    if is_full_black:
+        return {(0, 0, 0): []}, 0, rows
+    
     # return txt image
     return aimg, chars, rows
 
@@ -241,7 +257,7 @@ def main():
     # set framerate
     framerate = 12
     if args.framerate:
-        framerate = int(args.framerate)
+        framerate = float(args.framerate)
 
     # set colors
     colors = 8
@@ -253,7 +269,7 @@ def main():
     if args.cap:
         cap = int(args.cap)
 
-    print("\x1b[1mgenerating video...\x1b[0m")
+    print("\x1b[1mgenerating...\x1b[0m")
 
     output = ""
     nr_frames = 0
@@ -285,11 +301,7 @@ def main():
                     scale,
                     colors,
                     nr_frames,
-                    color_palette=(
-                        []
-                        if _EXTRA_SETTINGS["AUTO_PALETTE"]
-                        else _EXTRA_SETTINGS["CUSTOM_PALETTE"]
-                    ),
+                    color_palette=([] if _EXTRA_SETTINGS["AUTO_PALETTE"] else (_EXTRA_SETTINGS["CUSTOM_PALETTE"] + [(0, 0, 0)])),
                     can_print=can_print,
                 )
                 total_chars += chars
@@ -335,9 +347,7 @@ def main():
             scale,
             colors,
             1,
-            color_palette=(
-                [] if _EXTRA_SETTINGS["AUTO_PALETTE"] else _EXTRA_SETTINGS["CUSTOM_PALETTE"]
-            ),
+            color_palette=([] if _EXTRA_SETTINGS["AUTO_PALETTE"] else (_EXTRA_SETTINGS["CUSTOM_PALETTE"] + [(0, 0, 0)])),
         )
         rows = rows
         del aimg[(0, 0, 0)]
@@ -356,11 +366,11 @@ def main():
                 + ";"
             )
             last_char_is_line = False
-            output += "|"
-            last_char_is_line = True
-        meta = ";".join([0, str(columns), str(rows)]) + "|"
+            for row in value:
+                output += "\n" + row
+        meta = ";".join(["0", str(columns), str(rows)]) + "|"
         output = output[2:]
-        output = (output[::-1] + meta[::-1])[::-1]  # append metadata to the start
+        output = (output[::-1] + meta[::-1])[::-1] + "|"  # append metadata to the start
 
         # write to file
         with open(outFile, "w") as f:

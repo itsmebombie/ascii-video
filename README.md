@@ -58,6 +58,11 @@ Example: `py main.py --file examples/cutmeoff.mp4 --frame-cap 2500`
 
 These are all of the extra settings and what they do (they can be changed [at the top of the main.py file.](./main.py#L1)):
 
+### FASTER_COLOR_DISTANCE_FORMULA
+
+This setting determines whether the program uses a faster method of approximating each pixel's color value to the closest target value. If this is set to False, the Python program is going to use the Euclidean distance formula instead of the Manhattan distance formula. Using pre-computed square and square root arrays, setting it to False is going to make the script just a bit slower but the end result may look somewhat different.
+This will change the video just ever so slightly so only change the value to False when you really need to (or if you're just playing around).
+
 ### AUTO_PALETTE
 
 This setting determines whether the program generates the palettes automatically for each image. If you disable this, you will need to edit the `PALETTE` variable according to your necessities.
@@ -84,12 +89,18 @@ The amount of editor units the video is offset on the X axis (30 units = 1 grid 
 
 The amount of groups you want to get used. Unless you want to use the groups for something else, you should totally allocate all of the groups to the video, and there are 2 reasons for that.
 
-1. Allocating too little groups to the video can cause multiple frames to be visible at the same time (we are talking less than 100 groups).
+1. Allocating too little groups to the video can cause multiple frames to be visible at the same time (we are talking less than 100 groups), so you can't do that.
 2. There is a weird bug that moves the whole canvas by a visible amount every `n` frames, where `n` is the amount of groups you allocated.
+
+Also, allocating too many groups will probably error since you can only have 999 groups per level.
 
 ### use_1x
 
 Changes the speed from 4x to 1x. This won't change the speed of the video but it will take longer to load and rise the chance of crashing while loading. Only change this if you need to, for example, have gameplay while the video is running in the background.
+
+### size
+
+Changes the height of the video, which changes the whole video's size with it. (in full blocks)
 
 # Limits
 
