@@ -93,6 +93,7 @@ The amount of groups you want to get used. Unless you want to use the groups for
 2. There is a weird bug that moves the whole canvas by a visible amount every `n` frames, where `n` is the amount of groups you allocated.
 
 Also, allocating too many groups will probably error since you can only have 999 groups per level.
+Sometimes, when allocating to many groups, the frames and the move triggers might go invisible so make sure you don't use too many groups.
 
 ### use_1x
 
