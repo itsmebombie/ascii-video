@@ -35,8 +35,8 @@ def natural_keys(text):
 
 
 if not _EXTRA_SETTINGS["FASTER_COLOR_DISTANCE_FORMULA"]:
-    # square_8bit = tuple([i**2 for i in range(257)]) + tuple([(255-i)**2 for i in range(256)]) # (0,1,4,9,16,...65025,65536,65025,...9,4,1,0)
-    square_sub_8bit = tuple([tuple([(i-j)**2 for j in range(i)] + [j**2 for j in range(257-i)]) for i in range(257)]) # ((0,1,4,9,...65025,65536),(1,0,1,4,9,...64516,65025),...(65536,65025,...9,4,1,0))
+    square_8bit = tuple([i**2 for i in range(257)]) + tuple([(255-i)**2 for i in range(256)]) # (0,1,4,9,16,...65025,65536,65025,...9,4,1,0)
+    # square_sub_8bit = tuple([tuple([(i-j)**2 for j in range(i)] + [j**2 for j in range(257-i)]) for i in range(257)]) # ((0,1,4,9,...65025,65536),(1,0,1,4,9,...64516,65025),...(65536,65025,...9,4,1,0))
     sqrt_20bit = tuple([math.sqrt(i) for i in range(2**18+1)]) # (sqrt(0),sqrt(1),sqrt(2),...sqrt(262144))
 else:
     abs_8bit = [i for i in range(257)] + [255-i for i in range(256)] # (0,1,2,3,...255,256,255,...3,2,1,0)
@@ -55,9 +55,9 @@ def closest_color(target):
             + abs_8bit[color[2] - target[2]]
         else:
             distance = sqrt_20bit[
-                square_sub_8bit[color[0]][target[0]]
-                + square_sub_8bit[color[1]][target[1]]
-                + square_sub_8bit[color[2]][target[2]]
+                square_8bit[color[0] - target[0]]
+                + square_8bit[color[1] - target[1]]
+                + square_8bit[color[2] - target[2]]
             ]
 
         if distance < closest_distance:
