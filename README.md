@@ -51,8 +51,13 @@ Example: `py main.py --file examples/cutmeoff.mp4 --colors 8`
 
 ### --frame-cap
 
-This flag is an optional flag. You can specify the desired frame numbers it compiles before it stops here.
+This flag is an optional flag. You can specify the desired frame numbers it compiles before the program stops here.
 Example: `py main.py --file examples/cutmeoff.mp4 --frame-cap 2500`
+
+### --ascii-multi
+
+This flag is an optional flag. You can specify the desired ASCII grayscale multiplier here.
+Example: `py main.py --file examples/cutmeoff.mp4 --ascii-multi 1.25`
 
 ## Extra Settings
 
@@ -60,7 +65,7 @@ These are all of the extra settings and what they do (they can be changed [at th
 
 ### FASTER_COLOR_DISTANCE_FORMULA
 
-This setting determines whether the program uses a faster method of approximating each pixel's color value to the closest target value. If this is set to False, the Python program is going to use the Euclidean distance formula instead of the Manhattan distance formula. Using pre-computed square and square root arrays, setting it to False is going to make the script just a bit slower but the end result may look somewhat different.
+This setting determines whether the program uses a faster method of approximating each pixel's color value to the closest target value. If this is set to False, the Python program is going to use the Euclidean distance formula instead of the Manhattan distance formula. Using pre-computed square and square root arrays, setting it to False is going to make the script just a bit slower, but the end result may look somewhat different while lowering the character count by a fair amount.
 This will change the video just ever so slightly so only change the value to False when you really need to (or if you're just playing around).
 
 ### AUTO_PALETTE
@@ -70,12 +75,12 @@ This setting determines whether the program generates the palettes automatically
 ### FASTER_AUTO_PALETTE
 
 This setting determines whether the program uses a faster method of auto-generating the palettes for each image. If this is set to True, the Python program is going to be faster and the end result may look better for videos with lots of colors and the `--colors` flag being set to a small amount such as `4`.
-For videos with lots of colors and with the `--colors` flag bigger than `8`, disabling this option may result in better color palettes but also a 100% increase in the compilation time.
+For videos with lots of colors and with the `--colors` flag bigger than `8`, disabling this option may result in better color palettes but also a big increase in the compilation time.
 You can also try this when your video just doesn't look right. And if this doesn't fix it, then you can try increasing the `--colors` flag or try using a custom palette.
 
 ### CUSTOM_PALETTE
 
-This setting is only applied when `AUTO_PALETTE` is disabled. With this setting you can configure a custom palette for the video/image. The setting's format must look like this: `[(0, 0, 0), (255, 0, 0)]`, where every tuple is an RGB value.
+This setting is only applied when `AUTO_PALETTE` is disabled. With this setting you can configure a custom palette for the video/image. The setting's format must look like this: `[(0, 0, 0), (255, 0, 0), ...]`, where every tuple is an RGB value.
 
 ## SPWN Setup
 
@@ -106,6 +111,13 @@ Changes the height of the video, which changes the whole video's size with it. (
 
 Keep in mind that having over 16,384 characters per frame can cause some characters to dissapear due to a limit in Geometry Dash's code. You can see the amount of characters used on every 3rd frame while the Python script is running.
 Also, you can't have too many characters in the same place because that will also make the game crash. It's currently unknown how many characters is too much, but once I (or somebody else) finds out, the code along with this file will get updated.
+
+# Known Bugs
+
+These are all of the known bugs (caused by the program, not by Geometry Dash) as of right now:
+- The whole canvas moves by a visible amount every `n` frames, where `n` is the amount of groups you allocated.
+- Any framerate above 30 speeds up the video for some reason.
+- The video is a bit "jittery" when playing.
 
 # Misc
 

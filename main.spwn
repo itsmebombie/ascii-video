@@ -20,7 +20,7 @@ width = @number(__text[0][1])
 height = @number(__text[0][2])
 text = __text[1:]
 
-player_speed = 19.2333334 if use_1x == false else 10.3853853854
+player_speed = 19.1846522782 if use_1x == false else 10.3761348898
 frame_speed = player_speed*30*framerate
 
 let groups = level.get_objects(GROUPS, g => true).map(o => o[GROUPS]).filter(n => n != null).flatten().length // p
@@ -28,7 +28,6 @@ let used_groups_idx = 0
 let used_groups = []
 let using_used_groups = false
 let last_group = null
-let loops = 0
 
 obj{
     OBJ_ID: 1334 if use_1x == false else 201,
@@ -53,7 +52,6 @@ if framerate == 0 {
 } else {
     $.print()
     for j in 0..text.length {
-        if j > 1100 {break}
         frame = text[j]
         if frame.length < 2 {
             if last_group != null {
@@ -72,15 +70,15 @@ if framerate == 0 {
 
         if groups >= groups_in_use {
             using_used_groups = true
-            groups=0
-            loops++
+            groups = 0
+            // loops++
         }
 
         let group = null
         if using_used_groups {
-            if used_groups_idx >= groups_in_use-1 {
+            if used_groups_idx >= groups_in_use {
                 used_groups_idx = 0
-                loops++
+                // loops++
             }
             group = used_groups[used_groups_idx]
             used_groups_idx++
@@ -108,11 +106,11 @@ if framerate == 0 {
 
         obj{
             OBJ_ID: 901,
-            X: offset + j*frame_speed-2,
+            X: offset + j*frame_speed-1,
             Y: -20,
             TARGET: group,
-            DURATION: framerate*2,
-            MOVE_X: frame_speed*2,
+            DURATION: framerate*1.1,
+            MOVE_X: frame_speed*1.1,
         }.add()
 
         obj{
@@ -132,6 +130,8 @@ if framerate == 0 {
         }.add()
 
         last_group = group
-        $.print("\u{1b}[1Aframe ",j+1,"/",text.length)
+        if j%3==0 {
+            $.print("\u{1b}[1Aframe ",j+1,"/",text.length)
+        }
     }
 }
