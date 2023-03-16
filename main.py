@@ -39,7 +39,7 @@ if not _EXTRA_SETTINGS["FASTER_COLOR_DISTANCE_FORMULA"]:
     # square_sub_8bit = tuple([tuple([(i-j)**2 for j in range(i)] + [j**2 for j in range(257-i)]) for i in range(257)]) # ((0,1,4,9,...65025,65536),(1,0,1,4,9,...64516,65025),...(65536,65025,...9,4,1,0))
     sqrt_20bit = tuple([math.sqrt(i) for i in range(2**18+1)]) # (sqrt(0),sqrt(1),sqrt(2),...sqrt(262144))
 else:
-    abs_8bit = [i for i in range(257)] + [255-i for i in range(256)] # (0,1,2,3,...255,256,255,...3,2,1,0)
+    abs_8bit = tuple([i for i in range(257)] + [255-i for i in range(256)]) # (0,1,2,3,...255,256,255,...3,2,1,0)
 
 
 def closest_color(target):
@@ -48,16 +48,19 @@ def closest_color(target):
     for color in palette:
         if color == target:
             return color
+        
+        r, g, b = color
+        tr, tg, tb = target
 
         if _EXTRA_SETTINGS["FASTER_COLOR_DISTANCE_FORMULA"]:
-            distance = abs_8bit[color[0] - target[0]]
-            + abs_8bit[color[1] - target[1]]
-            + abs_8bit[color[2] - target[2]]
+            distance = abs_8bit[r - tr]
+            + abs_8bit[g - tg]
+            + abs_8bit[b - tb]
         else:
             distance = sqrt_20bit[
-                square_8bit[color[0] - target[0]]
-                + square_8bit[color[1] - target[1]]
-                + square_8bit[color[2] - target[2]]
+                square_8bit[r - tr]
+                + square_8bit[g - tg]
+                + square_8bit[b - tb]
             ]
 
         if distance < closest_distance:
@@ -70,14 +73,12 @@ def closest_color(target):
 def gen_palette(fileName, colors, image_rgb):
     if _EXTRA_SETTINGS["FASTER_AUTO_PALETTE"]:
         color_palette = image_rgb.quantize(colors=colors).getpalette()
-        return [
-            tuple(color_palette[i : i + 3]) for i in range(0, len(color_palette), 3)
-        ][:colors]
+        return tuple([tuple(color_palette[i : i + 3]) for i in range(0, len(color_palette), 3)][:colors])
     else:
         color_palette = extcolors.extract_from_path(
             fileName, tolerance=colors, limit=colors
         )[0]
-        return [color_palette[i][0] for i in range(0, len(color_palette))]
+        return tuple([color_palette[i][0] for i in range(0, len(color_palette))])
 
 
 def covertImageToAscii(fileName, columns, scale, colors, nr_frames, ascii_multi, color_palette=[], can_print=True):
@@ -87,10 +88,11 @@ def covertImageToAscii(fileName, columns, scale, colors, nr_frames, ascii_multi,
         to_print = "\x1b[1;34mframe " + str(nr_frames) + " \x1b[22;0m\n"
 
     # open image and convert to grayscale
-    image = Image.open(fileName)
-    image.thumbnail((columns, columns), Image.Resampling.NEAREST)
-    image_rgb = image.convert("RGB")
-    image_gray = image.convert("L")
+    img_cv = cv2.imread(fileName)
+    img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
+    image_rgb = Image.fromarray(img_rgb)
+    image_rgb.thumbnail((columns, columns), Image.Resampling.NEAREST)
+    image_gray = image_rgb.convert("L")
 
     # Get the color palette
     if color_palette == []:
@@ -189,7 +191,7 @@ def covertImageToAscii(fileName, columns, scale, colors, nr_frames, ascii_multi,
 
 def get_frames(video, framerate, columns, cap):
     clip = mp.VideoFileClip(video).without_audio()
-    clip = clip.subclip(0, cap/clip.fps)
+    clip = clip.set_fps(framerate).subclip(0, min(cap/clip.fps, clip.duration))
     clip_r = clip.resize(width=columns)
     clip_r.write_videofile("temp.mp4")
 
@@ -207,21 +209,12 @@ def get_frames(video, framerate, columns, cap):
             except Exception as e:
                 print("Failed to delete %s. Reason: %s" % (file_path, e))
 
-    def getFrame(sec):
-        vidcap.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
-        hasFrames, image = vidcap.read()
-        if hasFrames:
-            cv2.imwrite("converted/" + str(count) + ".png", image)
-        return hasFrames
-
-    sec = 0
     count = 1
-    success = getFrame(sec)
+    success, image = vidcap.read()
     while success and count < cap:
-        count = count + 1
-        sec = sec + 1 / framerate
-        sec = round(sec, 2)
-        success = getFrame(sec)
+        cv2.imwrite("converted/" + str(count) + ".png", image)
+        success, image = vidcap.read()
+        count += 1
         if count % 6 == 0:
             print("frame", count, "\x1b[1A")
 

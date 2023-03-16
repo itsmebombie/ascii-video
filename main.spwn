@@ -15,12 +15,13 @@ extract obj_props
 $.print("reading output...")
 __text = $.readfile("out.txt").split("|")[:-1].map(v => v.split(";"))
 
-framerate = @number(__text[0][0])
+framerate = 1/@number(__text[0][0])
 width = @number(__text[0][1])
 height = @number(__text[0][2])
 text = __text[1:]
 
-player_speed = 19.1846522782 if use_1x == false else 10.3761348898
+// idk which one is better so i used specky's speed library thingy https://github.com/SpeckyYT/SPWN-speed/
+player_speed = 10.37613454 if use_1x else 19.184659239999995 // 10.3761348898 if use_1x else 19.1846522782
 frame_speed = player_speed*30*framerate
 
 let groups = level.get_objects(GROUPS, g => true).map(o => o[GROUPS]).filter(n => n != null).flatten().length // p
@@ -30,13 +31,34 @@ let using_used_groups = false
 let last_group = null
 
 obj{
-    OBJ_ID: 1334 if use_1x == false else 201,
+    OBJ_ID: 201 if use_1x else 1334,
     X: -15,
     Y: 15,
 }.add()
 
-BG.set(rgb(0, 0, 0))
-1c.set(rgb(1, 0, 0))
+// black bg
+obj{
+    OBJ_ID: 899,
+    X: -30,
+    Y: 45,
+    TRIGGER_RED: 0,
+    TRIGGER_GREEN: 0,
+    TRIGGER_BLUE: 0,
+    DURATION: 0,
+    TARGET_COLOR: 1000c
+}.add()
+
+// red 1c
+obj{
+    OBJ_ID: 899,
+    X: -30,
+    Y: 45,
+    TRIGGER_RED: 255,
+    TRIGGER_GREEN: 0,
+    TRIGGER_BLUE: 0,
+    DURATION: 0,
+    TARGET_COLOR: 1c
+}.add()
 
 if framerate == 0 {
     for j in 0..text.length {
@@ -51,6 +73,8 @@ if framerate == 0 {
     }
 } else {
     $.print()
+
+    const_group = ?g
     for j in 0..text.length {
         frame = text[j]
         if frame.length < 2 {
@@ -68,16 +92,34 @@ if framerate == 0 {
             continue
         }
 
-        if groups >= groups_in_use {
+        if groups >= groups_in_use-1 {
             using_used_groups = true
             groups = 0
+
+            obj{
+                OBJ_ID: 901,
+                X: offset + j*frame_speed-1,
+                Y: 345,
+                TARGET: const_group,
+                DURATION: 0,
+                MOVE_X: -frame_speed*2,
+            }.add()
             // loops++
         }
 
         let group = null
         if using_used_groups {
-            if used_groups_idx >= groups_in_use {
+            if used_groups_idx >= groups_in_use-1 {
                 used_groups_idx = 0
+
+                obj{
+                    OBJ_ID: 901,
+                    X: offset + j*frame_speed-1,
+                    Y: 345,
+                    TARGET: const_group,
+                    DURATION: 0,
+                    MOVE_X: -frame_speed*2,
+                }.add()
                 // loops++
             }
             group = used_groups[used_groups_idx]
@@ -101,16 +143,16 @@ if framerate == 0 {
             color[0] = color[0].replace("\n", "").replace("\r", "")
             channel = frame[i*2+1]
 
-            channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, 75+offset + j*frame_speed).with(Y, 150).with(SCALING, ((width+0.5)/(height+0.5)*size)/width).with(GROUPS, group).add()
+            channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, 75+offset + j*frame_speed).with(Y, 150).with(SCALING, ((width+0.5)/(height+0.5)*size)/width).with(GROUPS, [group, const_group]).add()
         }
 
         obj{
             OBJ_ID: 901,
-            X: offset + j*frame_speed-1,
+            X: offset + j*frame_speed-3,
             Y: -20,
             TARGET: group,
-            DURATION: framerate*1.1,
-            MOVE_X: frame_speed*1.1,
+            DURATION: framerate*2,
+            MOVE_X: frame_speed*2,
         }.add()
 
         obj{

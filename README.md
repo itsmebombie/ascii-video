@@ -14,7 +14,7 @@ Copy the path of your video/image/folder.
 Open a terminal and make sure it's in the same directory as your working directory.
 Type in `py main.py --file {path}` and press enter.
 If you get any missing libraries errors, download them using `py -m pip install {library}`
-Also if `py` doesn't work for you, try using `python3` or check if Python is downloaded.
+Also if `py` doesn't work for you, try using `python`, `python3` or check if Python is downloaded.
 
 After it's done compiling, you can type `spwn build main.spwn --allow readfile` so it gets built to Geometry Dash.
 Make sure Geometry Dash is closed before executing that command though, otherwise it won't work.
@@ -94,8 +94,8 @@ The amount of editor units the video is offset on the X axis (30 units = 1 grid 
 
 The amount of groups you want to get used. Unless you want to use the groups for something else, you should totally allocate all of the groups to the video, and there are 2 reasons for that.
 
-1. Allocating too little groups to the video can cause multiple frames to be visible at the same time (we are talking less than 100 groups), so you can't do that.
-2. There is a weird bug that moves the whole canvas by a visible amount every `n` frames, where `n` is the amount of groups you allocated.
+1. Allocating too little groups to the video can cause multiple frames to be visible at the same time (we are talking less than 100 groups), so you better not do that.
+2. ~~There is a weird bug that moves the whole canvas by a visible amount every `n` frames, where `n` is the amount of groups you allocated.~~ This has sort of been fixed, but it's still a valid reason. You can check [the known bugs section](#known-bugs) for more information.
 
 Also, allocating too many groups will probably error since you can only have 999 groups per level.
 Sometimes, when allocating to many groups, the frames and the move triggers might go invisible so make sure you don't use too many groups.
@@ -116,8 +116,9 @@ Also, you can't have too many characters in the same place because that will als
 # Known Bugs
 
 These are all of the known bugs (caused by the program, not by Geometry Dash) as of right now:
-- The whole canvas moves by a visible amount every `n` frames, where `n` is the amount of groups you allocated.
-- Any framerate above 30 speeds up the video for some reason.
+- ~~The whole canvas moves by a visible amount every `n` frames, where `n` is the amount of groups you allocated.~~
+This has been sort of patched, it still does that sometimes but it moves back the next frame. If that happens, you can move the move trigger above the video to the left in the editor in order to attempt fixing it.
+- ~~Inconsistent framerate.~~ should be consistent now
 - The video is a bit "jittery" when playing.
 
 # Misc
