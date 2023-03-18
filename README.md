@@ -72,12 +72,6 @@ This will change the video just ever so slightly so only change the value to Fal
 
 This setting determines whether the program generates the palettes automatically for each image. If you disable this, you will need to edit the `PALETTE` variable according to your necessities.
 
-### FASTER_AUTO_PALETTE
-
-This setting determines whether the program uses a faster method of auto-generating the palettes for each image. If this is set to True, the Python program is going to be faster and the end result may look better for videos with lots of colors and the `--colors` flag being set to a small amount such as `4`.
-For videos with lots of colors and with the `--colors` flag bigger than `8`, disabling this option may result in better color palettes but also a big increase in the compilation time.
-You can also try this when your video just doesn't look right. And if this doesn't fix it, then you can try increasing the `--colors` flag or try using a custom palette.
-
 ### CUSTOM_PALETTE
 
 This setting is only applied when `AUTO_PALETTE` is disabled. With this setting you can configure a custom palette for the video/image. The setting's format must look like this: `[(0, 0, 0), (255, 0, 0), ...]`, where every tuple is an RGB value.

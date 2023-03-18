@@ -15,7 +15,7 @@ extract obj_props
 $.print("reading output...")
 __text = $.readfile("out.txt").split("|")[:-1].map(v => v.split(";"))
 
-framerate = 1/@number(__text[0][0])
+framerate = @number(__text[0][0])
 width = @number(__text[0][1])
 height = @number(__text[0][2])
 text = __text[1:]
@@ -29,6 +29,7 @@ let used_groups_idx = 0
 let used_groups = []
 let using_used_groups = false
 let last_group = null
+let last_last_group = null
 
 obj{
     OBJ_ID: 201 if use_1x else 1334,
@@ -74,16 +75,32 @@ if framerate == 0 {
 } else {
     $.print()
 
+    let last_frame = []
     const_group = ?g
+
     for j in 0..text.length {
         frame = text[j]
+
+        if frame == last_frame {
+            obj{
+                OBJ_ID: 901,
+                X: offset + j*frame_speed-2,
+                Y: -20,
+                TARGET: last_group,
+                DURATION: framerate,
+                MOVE_X: frame_speed,
+            }.add()
+
+            continue
+        }
+
         if frame.length < 2 {
-            if last_group != null {
+            if last_last_group != null {
                 obj{
                     OBJ_ID: 1049,
-                    X: offset + (j+1)*frame_speed,
+                    X: offset + j*frame_speed,
                     Y: -60,
-                    TARGET: last_group,
+                    TARGET: last_last_group,
                     ACTIVATE_GROUP: false,
                 }.add()
             }
@@ -102,7 +119,7 @@ if framerate == 0 {
                 Y: 345,
                 TARGET: const_group,
                 DURATION: 0,
-                MOVE_X: -frame_speed*2,
+                MOVE_X: -frame_speed-2,
             }.add()
             // loops++
         }
@@ -118,7 +135,7 @@ if framerate == 0 {
                     Y: 345,
                     TARGET: const_group,
                     DURATION: 0,
-                    MOVE_X: -frame_speed*2,
+                    MOVE_X: -frame_speed-2,
                 }.add()
                 // loops++
             }
@@ -146,13 +163,23 @@ if framerate == 0 {
             channel.to_obj().with(HVS_ENABLED, true).with(HVS, "{}a{}a{}a0a0".fmt(color)).with(X, 75+offset + j*frame_speed).with(Y, 150).with(SCALING, ((width+0.5)/(height+0.5)*size)/width).with(GROUPS, [group, const_group]).add()
         }
 
+        if last_group != null {
+            obj{
+                OBJ_ID: 1049,
+                X: offset + j*frame_speed,
+                Y: -60,
+                TARGET: last_group,
+                ACTIVATE_GROUP: false,
+            }.add()
+        }
+
         obj{
             OBJ_ID: 901,
-            X: offset + j*frame_speed-3,
+            X: offset + j*frame_speed-2,
             Y: -20,
             TARGET: group,
-            DURATION: framerate*2,
-            MOVE_X: frame_speed*2,
+            DURATION: framerate,
+            MOVE_X: frame_speed+2,
         }.add()
 
         obj{
@@ -163,17 +190,9 @@ if framerate == 0 {
             ACTIVATE_GROUP: true,
         }.add()
 
-        obj{
-            OBJ_ID: 1049,
-            X: offset + (j+1)*frame_speed,
-            Y: -60,
-            TARGET: group,
-            ACTIVATE_GROUP: false,
-        }.add()
-
         last_group = group
-        if j%3==0 {
-            $.print("\u{1b}[1Aframe ",j+1,"/",text.length)
-        }
+        last_last_group = last_group
+        last_frame = frame
+        if j%3==0 { $.print("\u{1b}[1Aframe ",j+1,"/",text.length) }
     }
 }

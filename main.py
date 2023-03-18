@@ -1,9 +1,7 @@
 _EXTRA_SETTINGS = {
     "FASTER_COLOR_DISTANCE_FORMULA": True, # uses manhattan distance formula instead of euclidean distance formula when calculating the color palette of a frame
     # it may give slightly less accurate results (not that noticeable) and it can use more characters but it's a bit faster 
-    "AUTO_PALETTE": False,  # enable auto palette generation
-    "FASTER_AUTO_PALETTE": True,  # faster, less precise color palette generation
-    # i would say it looks better on videos that have many colors but you used --colors 4 or something
+    "AUTO_PALETTE": True,  # enable auto palette generation
     "CUSTOM_PALETTE": [
         (255, 255, 255),
     ],  # only applied when AUTO_PALETTE is set to False
@@ -71,19 +69,14 @@ def closest_color(target):
 
 
 def gen_palette(fileName, colors, image_rgb):
-    if _EXTRA_SETTINGS["FASTER_AUTO_PALETTE"]:
-        color_palette = image_rgb.quantize(colors=colors).getpalette()
-        return tuple([tuple(color_palette[i : i + 3]) for i in range(0, len(color_palette), 3)][:colors])
-    else:
-        color_palette = extcolors.extract_from_path(
-            fileName, tolerance=colors, limit=colors
-        )[0]
-        return tuple([color_palette[i][0] for i in range(0, len(color_palette))])
+    color_palette = image_rgb.quantize(colors=colors).getpalette()
+    return tuple([tuple(color_palette[i : i + 3]) for i in range(0, len(color_palette), 3)][:colors])
 
 
+last_frame = {}
 def covertImageToAscii(fileName, columns, scale, colors, nr_frames, ascii_multi, color_palette=[], can_print=True):
     # declare globals
-    global ascii_characters, palette
+    global ascii_characters, palette, last_frame
     if can_print:
         to_print = "\x1b[1;34mframe " + str(nr_frames) + " \x1b[22;0m\n"
 
@@ -169,6 +162,10 @@ def covertImageToAscii(fileName, columns, scale, colors, nr_frames, ascii_multi,
 
             for _ in aimg[key][j]:
                 chars += 1
+
+    if last_frame == aimg:
+        chars = 0
+    last_frame = aimg
 
     if is_full_black:
         if can_print:
