@@ -18,7 +18,6 @@ import shutil
 import time
 
 import cv2
-import extcolors
 import moviepy.editor as mp
 from PIL import Image
 
