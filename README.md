@@ -1,3 +1,7 @@
+# Disclaimer
+
+I am not responsible for anything you do with this program.
+
 # Info
 
 ascii-video is a program written in Python and SPWN that is designed to convert mostly videos (but images too) to ASCII art and put them in Geometry Dash. 
@@ -46,7 +50,7 @@ Example: `py main.py --file examples/cutmeoff.mp4 --framerate 12`
 
 ### --colors
 
-This flag is an optional flag. You can specify the desired amount of colors here. Each color is a text object. More colors = more characters.
+This flag is an optional flag. You can specify the desired amount of colors here. Each color is a text object. More colors = more objects and characters.
 Example: `py main.py --file examples/cutmeoff.mp4 --colors 8`
 
 ### --frame-cap
